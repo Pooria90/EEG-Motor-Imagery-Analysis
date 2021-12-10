@@ -4,9 +4,11 @@ This module containes the contains the codes that I wrote for my network trainin
 
 import torch
 import torch.nn.functional as F
+from torch import nn
 from torch import optim
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
+from copy import deepcopy
 
 def accuracy(out, yb):
     preds = torch.argmax(out, dim=1)
@@ -32,12 +34,32 @@ def update (model, opt, loss_func, xb, yb):
     opt.step()
     
     return loss.item(), acc.item()
-        
 
+
+class EarlyStopping():
+    def __init__(self, state, patience=10, attribute='loss'):
+        '''
+        a class for doining early stopping during training
+        
+        state     : use ES or not (boolean)
+        patience  : if we see this number of results after our best result we break the training loop (int)
+        attribute : the attribute for validation data that we decide the stopping based on that ('loss' or 'acc')
+        '''
+        
+        self.state     = state
+        self.patience  = patience
+        self.attribute = attribute
+        self.b_model   = nn.Module()                                # best model that is found during trainin
+        self.atr_value = float('inf') if attribute == 'loss' else 0 # valid loss/acc of best model
+        self.counter   = 0                                          # if counter==patience then stop training
+        pass
+
+    
 def train (
     model, x_train, y_train, x_valid, y_valid,
     batch_size, epochs, learning_rate,
-    loss_func = F.nll_loss, period = 1
+    loss_func = F.nll_loss, period = 1,
+    er_stop = EarlyStopping(state=False)
     ):
     
     '''
@@ -52,6 +74,7 @@ def train (
     period        : period for printing training and validation logs (int)
     loss_func     : loss function that is used for updating weights
     device        : 'cpu' or 'gpu'
+    er_stop       : EarlyStopping object (default is training loop without early-stopping)
     '''
     
     history = {'train_loss' : [],
@@ -98,4 +121,25 @@ def train (
                 history['valid_loss'][-1], history['valid_acc'][-1]*100,
             ))
         
+        if er_stop.state:
+            if er_stop.attribute == 'loss':
+                if history['valid_loss'][-1] < er_stop.atr_value:
+                    er_stop.atr_value = history['valid_loss'][-1]
+                    er_stop.b_model   = deepcopy(model)
+                    er_stop.counter   = 0 
+                else:
+                    er_stop.counter  += 1
+                    
+            elif er_stop.attribute == 'acc':
+                if history['valid_acc'][-1] > er_stop.atr_value:
+                    er_stop.atr_value = history['valid_acc'][-1]
+                    er_stop.b_model   = deepcopy(model)
+                    er_stop.counter   = 0
+                else:
+                    er_stop.counter  += 1
+            
+            if er_stop.counter == er_stop.patience:
+                model = deepcopy(er_stop.b_model)
+                break
+                
     return history
