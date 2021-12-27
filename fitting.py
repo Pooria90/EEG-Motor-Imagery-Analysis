@@ -94,7 +94,7 @@ def train (
     
     for ep in range(1, epochs+1):
         if ep % period == 0 or ep == 1:
-            print (f'*** Epoch: {ep} ***')
+            print (f'\n*** Epoch: {ep} ***')
         
         tmp_loss, tmp_acc = [], []
         for x, y in train_dl:
