@@ -61,6 +61,16 @@ S=Y-N.b
 $$
 Where $S$ is actual EEG data, $Y$ is noisy EEG, and $N$ is EOG data.
 
+The effect of EOG removal in a selected interval is illustrated in the two following figures. The upper three signals are EOG channels and the others are EEG. As you can see, the effect of EOG peaks in EEG signals in omitted in the second figure.
+
+<figure>
+    <img src="./images/eog_bef.png", width=700, height=350>
+</figure>
+
+<figure>
+    <img src="./images/eog_aft.png", width=700, height=350>
+</figure>
+
 ### Bandpass Filter
 
 Bandpass filtering is performed using a sixth order Butterworth bandpass filter with low cut of $4Hz$ and high cut of $38Hz$. This choice is because of the fact that motor imagery features generally happen in alpha and beta band of EEG.
@@ -96,8 +106,15 @@ A conceptual illustration of the architecture from the paper is given below:
 </figure>
 
 
-
 We defined DepthwiseConv2D and SeperableConv2D layers using predefined `torch` layer `Conv2D`. Additionally, there is a norm constraint on the weights of Conv2D and fully connected layer. So, we defined the layers `Conv2dConstrained` and `LinearConstrained`. I learned a lot from examples of `braindecode` library for this and later models.
+
+### Shallow/Deep ConvNet [[schir]](#4)
+
+These structures are from one of the most inspiring articles in motor imagery EEG domain.
+
+Shallow ConvNet is designed based on the CSP method (the use of log and square as activation functions reflects this fact).
+
+Deep ConvNet is a bigger network with more parameters. Therefore, for better training we need to use a smaller step for out data augmentation.
 
 
 ## References
@@ -107,3 +124,5 @@ We defined DepthwiseConv2D and SeperableConv2D layers using predefined `torch` l
 <a id="2">[schlogl] </a>Schlogl et al. (2007), **A fully automated correction method of EOG artifacts in EEG recordings**, *Clinical Neurophysiology*, vol. 118, p. 98
 
  <a id="3">[lawhern] </a> Lawhern et al. (2018), **EEGNet: A Compact Convolutional Neural Network for EEG-based Brain-Computer Interfaces**, *Journal of Neural Engineering*, vol. 15, p. 13
+
+<a id="4">[schir] </a> Schirrmeister et al. (2017), **Deep Learning with Convolutional Neural Networks for EEG Decoding and Visualization**, *Human Brain Mapping*, vol. 38, p. 5391
