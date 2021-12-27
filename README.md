@@ -1,7 +1,7 @@
 # EEG-Motor-Imagery-Analysis
 This repository belongs to my implementations during my **B.Sc. Project**. The main title was _Applications of Deep Neural Networks in EEG Signal Analysis_.
 
-[toc]
+
 
 ## Introduction
 
@@ -11,7 +11,6 @@ Electroencephalography (EEG) is an electrophysiological monitoring method to rec
     <img src="./images/spike-waves.png">
     <figcaption align="center"> Epileptic spike and wave discharges [<a href="https://en.wikipedia.org/wiki/Electroencephalography" target="_blank">source</a>] </figcaption>
 </figure>
-
 
 
 The obtained signal usually has an amplitude in $\mu V$ range and $ms$ time resolution. The fundamental features of the signal lie in $0.1-100Hz$ in frequency domain. EEG has a wide variety of applications in:
@@ -38,9 +37,10 @@ The dataset we used is [BCI Competition IV 2a](http://www.bbci.de/competition/iv
 The signals were obtained using 22 Ag/AgCl electrodes for EEG, sampled in $250Hz$ rate and bandpass-filtered in $0.5-100Hz$. At the beginning of each session an approximately 5-minutes recording was performed to estimate the effect of EOG signals (there are also 3 EOG channels). The location of the electrodes is shown in the below figure:
 
 <figure>
-    <img src="./images/bcic.jpg", width=400, height=200>
+    <img src="./images/bcic.png", width=400, height=200>
     <figcaption align="center"> Electrode locations </figcaption>
 </figure>
+
 
 
 ## Preprocessing
@@ -49,7 +49,7 @@ The functions for downloading the dataset, extracting subject data, and doing th
 
 The first step of preprocessing is to remove EOG artifacts. Based on [[schlogl]](#2), the received signal in each EEG electrode is considered as the sum of real signal and a linear combination of EOG electrodes. The coefficients this linear combinations are calculated for each EEG channel and for each EOG channel. Finally, we have a 66 coefficients that we use for EOG removal. The below equation is used for the process:
 $$
-b=C^{-1}_{NN}.C_{NY}
+b=C_{NN}^{-1}.C_{NY}
 $$
 where $C_{NN}$ is the autocovariance matrix of EOG data, $C_{NY}$ is cross-covariance matrix of EEG and EOG data.
 
