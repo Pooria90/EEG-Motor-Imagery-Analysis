@@ -47,6 +47,8 @@ The signals were obtained using 22 Ag/AgCl electrodes for EEG, sampled in $250Hz
 
 The functions for downloading the dataset, extracting subject data, and doing the preprocessing steps are gathered in `datautils.py`.
 
+### EOG Removal
+
 The first step of preprocessing is to remove EOG artifacts. Based on [[schlogl]](#2), the received signal in each EEG electrode is considered as the sum of real signal and a linear combination of EOG electrodes. The coefficients this linear combinations are calculated for each EEG channel and for each EOG channel. Finally, we have a 66 coefficients that we use for EOG removal. The below equation is used for the process:
 $$
 b=C_{NN}^{-1}.C_{NY}
@@ -59,7 +61,43 @@ S=Y-N.b
 $$
 Where $S$ is actual EEG data, $Y$ is noisy EEG, and $N$ is EOG data.
 
+### Bandpass Filter
 
+Bandpass filtering is performed using a sixth order Butterworth bandpass filter with low cut of $4Hz$ and high cut of $38Hz$. This choice is because of the fact that motor imagery features generally happen in alpha and beta band of EEG.
+
+### Channel Normalization
+
+Each channel is normalized using its own mean and standard deviation (namely _Z-score normalization_). This can be done during data extraction using the function `mat_extractor` in `datautils.py`.
+
+###  Data Augmentation
+
+Since the dataset does not have enough data to train a deep neural network, we crop the signals using sliding windows with specific step and size. The size of the window is 500 samples (2 seconds; like the articles in the literature). Smaller step means more data. We can change our training size by adjusting the step of this sliding window. Two approaches may come up here:
+
+1. Crop the signals and make a training dataset before the training process
+   - This approach may encounter memory problems when setting small steps.
+2. Crop a batch of signals during each update of the networks parameters.
+   - This approach fixes the memory problem. However, the same process of batch extraction in every epoch may considerably increase our training time.
+
+Both approaches are implemented and corresponding train functions (`train` and `cropped_train`) are in `fitting.py`.
+
+## Models
+
+### EEGNet [[lawhern]](#3)
+
+This model is a compact, yet effective model for classification of BCI signals. Four types of BCI signals were analyzed in the main paper. But we only examined motor imagery EEG.
+
+I the original paper the signals were resampled to $128Hz$ (to be able to use the same network for different BCI paradigms). However, we used the $250Hz$ sampling rate of the dataset.
+
+A conceptual illustration of the architecture from the paper is given below:
+
+<figure>
+    <img src="./images/EEGNet.png", width=400, height=250>
+    <figcaption align="center"> EEGNet visualization </figcaption>
+</figure>
+
+
+
+We defined DepthwiseConv2D and SeperableConv2D layers using predefined `torch` layer `Conv2D`. Additionally, there is a norm constraint on the weights of Conv2D and fully connected layer. So, we defined the layers `Conv2dConstrained` and `LinearConstrained`. I learned a lot from examples of `braindecode` library for this and later models.
 
 
 ## References
@@ -68,4 +106,4 @@ Where $S$ is actual EEG data, $Y$ is noisy EEG, and $N$ is EOG data.
 
 <a id="2">[schlogl] </a>Schlogl et al. (2007), **A fully automated correction method of EOG artifacts in EEG recordings**, *Clinical Neurophysiology*, vol. 118, p. 98
 
- 
+ <a id="3">[lawhern] </a> Lawhern et al. (2018), **EEGNet: A Compact Convolutional Neural Network for EEG-based Brain-Computer Interfaces**, *Journal of Neural Engineering*, vol. 15, p. 13
