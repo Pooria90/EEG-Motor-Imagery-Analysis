@@ -1,6 +1,6 @@
 '''
 This modules contains the models that I implemented,
-and the block the make up this models
+and the blocks the make up these models
 '''
 
 import numpy as np
@@ -17,6 +17,7 @@ class Lambda(nn.Module):
     def forward(self, x):
         return self.func(x)
 
+# a function for adding Flatten layers to Conv2d architectures
 def myreshape(xb):
     return xb.view(-1,xb.shape[1]*xb.shape[3])
 
@@ -44,16 +45,40 @@ class LinearConstrained(nn.Linear):
         )
         return super(LinearConstrained, self).forward(x)
     
+# a class that allows us to define linear layers without specifying in_features
+class LinearModified(nn.Module):
+    def __init__(self, out_features, bias=False, max_norm=None):
+        super().__init__()
+        self.in_features = None
+        self.out_features = out_features
+        self.bias = bias
+        self.max_norm = max_norm
+        self.__built = False
+        self.lin = nn.Module()
+        
+    def forward(self, xb):
+        assert xb.ndim == 2, 'xb should have 2 dimensions'
+        if self.__built == False:
+            self.__built = True
+            self.in_features = xb.shape[1]
+            if self.max_norm == None:
+                self.lin = nn.Linear(self.in_features, self.out_features, bias=self.bias)
+            else:
+                self.lin = LinearConstrained(self.in_features, self.out_features, max_norm=self.max_norm, bias=self.bias)
+        xb = self.lin(xb)
+        return xb
+    
 # EEGNet
 class EEGNet(nn.Module):
-    def __init__(self, F1 = 8, C = 22, D = 2, F2 = 16, kernel_length = 125):
+    def __init__(self, F1 = 8, C = 22, D = 2, F2 = 16, ks = 125, N = 4):
         super().__init__()
         self.name = 'EEGNet'
         self.F1 = F1
-        self.C = C
-        self.D = D
+        self.C  = C
+        self.D  = D
         self.F2 = F2
-        self.L = kernel_length
+        self.L  = ks
+        self.N  = N
         
         # Conv2D layer
         self.layer1 = nn.Sequential(
@@ -83,7 +108,8 @@ class EEGNet(nn.Module):
         
         # Classification layer
         self.layer4 = nn.Sequential(
-            LinearConstrained(240,4,max_norm = 0.25,bias = False)
+            #LinearConstrained(240,4,max_norm = 0.25,bias = False)
+            LinearModified(self.N, max_norm=0.25)
         )
         
     def forward(self, xb):
@@ -95,10 +121,11 @@ class EEGNet(nn.Module):
 
 # Shallow ConvNet
 class ShallowNet(nn.Module):
-    def __init__(self, C=22, F1=40):
+    def __init__(self, C=22, F1=40, N=4):
         super().__init__()
         self.C  = C
         self.F1 = F1
+        self.N  = N
         self.conv = nn.Sequential(
             Conv2dConstrained(1, self.F1, kernel_size=(1,14), max_norm=2, bias=False, padding=(0,0)),
             Conv2dConstrained(self.F1, self.F1, kernel_size=(self.C,1), max_norm=2, bias=False, groups=self.F1, padding=(0,0)),
@@ -110,7 +137,8 @@ class ShallowNet(nn.Module):
             nn.Dropout(p=0.5)
         )
         self.fc = nn.Sequential(
-            LinearConstrained(2600, 4, max_norm=0.5, bias=False)
+            #LinearConstrained(2600, 4, max_norm=0.5, bias=False)
+            LinearModified(self.N, max_norm=0.5)
         )
         
     def forward(self, xb):
@@ -160,9 +188,10 @@ class DeepNet(nn.Module):
             nn.Dropout(p=0.5),
             Lambda(myreshape)
         )
-        self.fc_units = ((((self.T - self.ks+1)//2 - self.ks+1)//2 - self.ks+1)//2 - self.ks+1)//2 * self.F4
+        #self.fc_units = ((((self.T - self.ks+1)//2 - self.ks+1)//2 - self.ks+1)//2 - self.ks+1)//2 * self.F4
         self.fc = nn.Sequential(
-            LinearConstrained(self.fc_units, self.N, max_norm=0.5, bias=False)
+            #LinearConstrained(self.fc_units, self.N, max_norm=0.5, bias=False)
+            LinearModified(self.N, max_norm=0.5)
         )
 
     def forward(self, xb):
@@ -172,4 +201,3 @@ class DeepNet(nn.Module):
         xb = self.layer4(xb)
         xb = F.log_softmax(self.fc(xb), dim=1)
         return xb
-        

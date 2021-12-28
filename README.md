@@ -1,6 +1,8 @@
 # EEG-Motor-Imagery-Analysis
 This repository belongs to my implementations during my **B.Sc. Project**. The main title was _Applications of Deep Neural Networks in EEG Signal Analysis_.
 
+My project was finished in June 2021. Afterwards, I learned much more about deep learning programming. So, the code that I put here is the revised and cleaned version of my original code.
+
 
 
 ## Introduction
@@ -61,7 +63,7 @@ S=Y-N.b
 $$
 Where $S$ is actual EEG data, $Y$ is noisy EEG, and $N$ is EOG data.
 
-The effect of EOG removal in a selected interval is illustrated in the two following figures. The upper three signals are EOG channels and the others are EEG. As you can see, the effect of EOG peaks in EEG signals in omitted in the second figure.
+The effect of EOG removal in a selected interval is illustrated in the two following figures. The upper three signals are EOG channels and the others are EEG. As you can see, the effect of EOG peaks in EEG signals is omitted in the second figure.
 
 <figure>
     <img src="./images/eog_bef.png", width=700, height=350>
