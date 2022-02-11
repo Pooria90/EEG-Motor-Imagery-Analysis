@@ -167,8 +167,9 @@ def cropper (signals, labels, window, step):
     
     for i in range(signals.shape[0]):
         for j in begs:
-            crops .append(signals[i:i+1, :, j:j+window])
-            annots.append(labels[i])
+            if j + window < time:
+                crops .append(signals[i:i+1, :, j:j+window])
+                annots.append(labels[i])
     
     crops  = np.concatenate(crops, axis=0)
     annots = np.array(annots)
