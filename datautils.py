@@ -161,13 +161,13 @@ def cropper (signals, labels, window, step):
     '''
     
     time   = signals.shape[2]             # number of time points
-    begs   = list(range(0, time-1, step)) # begining indices of sliding windows
+    begs   = list(range(0, time, step))   # begining indices of sliding windows
     crops  = list()                       # list contaiing croppend signals
     annots = list()                       # labels of cropped signals
     
     for i in range(signals.shape[0]):
         for j in begs:
-            if j + window < time:
+            if j + window <= time:
                 crops .append(signals[i:i+1, :, j:j+window])
                 annots.append(labels[i])
     
