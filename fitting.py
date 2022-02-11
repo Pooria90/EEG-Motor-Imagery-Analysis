@@ -87,7 +87,10 @@ def train (
     else:
         device = 'cpu'
         
-    train_ds = TensorDataset(x_train.float(), y_train.long())
+    #train_ds = TensorDataset(x_train.float(), y_train.long())
+    #train_dl = DataLoader(train_ds, batch_size=batch_size)
+    
+    train_ds = TensorDataset(x_train.float().to(device), y_train.long().to(device))
     train_dl = DataLoader(train_ds, batch_size=batch_size)
         
     opt = optim.Adam(model.parameters(),lr=learning_rate, eps=1e-8)
@@ -97,8 +100,8 @@ def train (
             print (f'\n*** Epoch: {ep} ***')
         
         tmp_loss, tmp_acc = [], []
-        for x, y in train_dl:
-            xb, yb = x.to(device), y.to(device)
+        for xb, yb in train_dl:
+            #xb, yb = x.to(device), y.to(device)
             loss, acc = update(model, opt, loss_func, xb, yb)
             tmp_loss.append(loss)
             tmp_acc. append(acc)
