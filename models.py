@@ -54,17 +54,18 @@ class LinearModified(nn.Module):
         self.bias = bias
         self.max_norm = max_norm
         self.__built = False
-        self.lin = nn.Module()
+        self.lin = 0
         
     def forward(self, xb):
         assert xb.ndim == 2, 'xb should have 2 dimensions'
         if self.__built == False:
             self.__built = True
             self.in_features = xb.shape[1]
+            dev = 'cpu' if xb.get_device == -1 else 'cuda'
             if self.max_norm == None:
-                self.lin = nn.Linear(self.in_features, self.out_features, bias=self.bias)
+                self.lin = nn.Linear(self.in_features, self.out_features, bias=self.bias).to(dev)
             else:
-                self.lin = LinearConstrained(self.in_features, self.out_features, max_norm=self.max_norm, bias=self.bias)
+                self.lin = LinearConstrained(self.in_features, self.out_features, max_norm=self.max_norm, bias=self.bias).to(dev)
         xb = self.lin(xb)
         return xb
     
