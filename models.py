@@ -202,3 +202,39 @@ class DeepNet(nn.Module):
         xb = self.layer4(xb)
         xb = F.log_softmax(self.fc(xb), dim=1)
         return xb
+
+# CNN-i structures
+# Based on Deep Learning for EEG motor imagery classification based on multi-layer CNNs feature fusion
+class CNN_1(nn.Module):
+    def __init__(self,ks1=30,f1=50,f2=50,dense=512,N=4,p=0.5):
+        super().__init__()
+        self.D = dense
+        self.ks1 = ks1
+        self.f1 = f1
+        self.f2 = f2
+        self.N = N
+        self.layer1 = nn.Sequential(
+            Conv2dConstrained(1,self.f1,kernel_size=(1,self.ks1),max_norm=2,bias=False),
+            nn.BatchNorm2d(self.f1),
+            Conv2dConstrained(self.f1,self.f2,kernel_size=(22,1),max_norm=2,groups=50,bias=False),
+            nn.BatchNorm2d(self.f2),
+            nn.ELU(),
+            nn.MaxPool2d((1,3),stride=3),
+            nn.Dropout(p),
+            Lambda(myreshape)
+        )
+        self.layer2 = nn.Sequential(
+            nn.LinearModified(self.D,bias=False),
+            nn.BatchNorm1d(self.D),
+            nn.ELU(),
+            nn.Dropout(p)
+        )
+        self.layer3 = nn.Sequential(
+            LinearConstrained(self.D,self.N,max_norm=0.5,bias=False)
+        )
+
+    def forward(self, xb):
+        xb = self.layer1(xb)
+        xb = self.layer2(xb)
+        xb = F.log_softmax(self.layer3(xb),dim=1)
+        return xb
